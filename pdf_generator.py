@@ -5,6 +5,14 @@ from utils import format_timestamp
 def create_pdf_with_images(image_paths, timestamps, pdf_filename):
     """
     Cria um PDF com imagens e timestamps.
+
+    Parâmetros:
+    - image_paths (list): Uma lista de strings, onde cada string é o caminho para um arquivo de imagem.
+    - timestamps (list): Uma lista de timestamps correspondentes a cada imagem.
+    - pdf_filename (str): O nome do arquivo PDF a ser criado.
+
+    Retorna:
+    - None: A função cria um arquivo PDF e não retorna nenhum valor.
     """
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=10)

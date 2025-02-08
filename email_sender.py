@@ -7,6 +7,15 @@ from email.message import EmailMessage
 def send_email_with_pdf(pdf_path, email_sender, email_password, email_receiver):
     """
     Envia um único e-mail contendo o relatório PDF como anexo.
+
+    Args:
+        pdf_path (str): O caminho para o arquivo PDF a ser anexado.
+        email_sender (str): O endereço de e-mail do remetente.
+        email_password (str): A senha do e-mail do remetente.
+        email_receiver (str): O endereço de e-mail do destinatário.
+
+    Returns:
+        None
     """
     msg = EmailMessage()
     msg["Subject"] = "Relatório de Detecção YOLO"

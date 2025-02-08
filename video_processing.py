@@ -7,6 +7,23 @@ from detection_logic import should_save_frame
 def process_video(video_path, model, output_folder, fps, frame_count, last_detections, detected_frames, timestamps):
     """
     Processa o vídeo, detecta objetos e salva os frames detectados.
+
+    Args:
+        video_path (str): O caminho para o arquivo de vídeo.
+        model: O modelo YOLO para detecção de objetos.
+        output_folder (str): O caminho para a pasta onde os frames detectados serão salvos.
+        fps (float): A taxa de quadros do vídeo.
+        frame_count (int): O número de frames processados até o momento.
+        last_detections (dict): Um dicionário contendo as últimas detecções de objetos.
+        detected_frames (list): Uma lista contendo os caminhos dos frames detectados.
+        timestamps (list): Uma lista contendo os timestamps dos frames detectados.
+
+    Returns:
+        tuple: Uma tupla contendo:
+            - frame_count (int): O número total de frames processados.
+            - last_detections (dict): As últimas detecções de objetos.
+            - detected_frames (list): A lista de caminhos dos frames detectados.
+            - timestamps (list): A lista de timestamps dos frames detectados.
     """
     cap = cv2.VideoCapture(video_path)
 
