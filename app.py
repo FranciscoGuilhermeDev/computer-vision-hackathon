@@ -20,12 +20,20 @@ last_detections = {}  # Armazena as últimas detecções para evitar repetição
 detected_frames = []  # Lista para armazenar os frames detectados
 timestamps = []       # Lista para armazenar os timestamps dos frames detectados
 
+# Carregar o modelo YOLO treinado **apenas uma vez**
+@st.cache_resource
+def load_model():
+    return YOLO("models/grupo44_v1.pt")
+
+model_trained = load_model()
+
 # Interface do Streamlit
-st.title("Detecção de Objetos Cortantes em Vídeo")
+st.title("🔪 Detecção de Objetos Cortantes em Vídeo")
 
 # Upload do vídeo pelo usuário
 uploaded_file = st.file_uploader("Carregue um vídeo", type=["mp4", "avi"])
 
+# Verifica se um vídeo foi carregado
 if uploaded_file:
     # Salvar o arquivo temporariamente
     video_path = "temp_video.mp4"
@@ -42,8 +50,6 @@ if uploaded_file:
         # Botão para iniciar o processamento
         if st.button("🔍 CLIQUE AQUI para iniciar Processamento"):
             with st.spinner("⏳ Processando vídeo... Isso pode levar alguns minutos."):
-                # Carregar o modelo YOLO treinado
-                model_trained = YOLO("models/grupo44_v1.pt")
 
                 # Criar diretório para salvar os frames detectados
                 output_folder = create_numbered_folder()
@@ -55,7 +61,7 @@ if uploaded_file:
 
                 # Placeholder para atualizar a interface dinamicamente
                 status_text = st.empty()
-                status_text.text("Processando frames do vídeo...")
+                status_text.text("🔄 Analisando frames do vídeo...")
 
                 # Processar os frames do vídeo
                 frame_count, last_detections, detected_frames, timestamps = process_video(
@@ -65,7 +71,7 @@ if uploaded_file:
                 # Criar e enviar o relatório PDF ao final do vídeo
                 if detected_frames:
                     pdf_filename = os.path.join(output_folder, "relatorio_detectado.pdf")
-                    status_text.text("Gerando relatório PDF...")
+                    status_text.text("📄 Gerando relatório PDF...")
                     create_pdf_with_images(detected_frames, timestamps, pdf_filename)
                     send_email_with_pdf(pdf_filename, EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER)
                     st.success("✅ Processamento concluído com sucesso!")
