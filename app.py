@@ -2,32 +2,24 @@ import os
 import cv2
 import streamlit as st
 
+import config
+
 from ultralytics import YOLO
 
 from utils import create_numbered_folder
-from video_processing import process_video
+from video_processing import run_detection_pipeline
 from email_sender import send_email_with_pdf
 from pdf_generator import create_pdf_with_images
 
 
-# Configurações do e-mail
-EMAIL_SENDER =      "email@gmail.com"    # Seu e-mail
-EMAIL_PASSWORD =    "senha"              # Senha do app SMTP
-EMAIL_RECEIVER =    "destino@gmail.com"  # Destinatário do e-mail
-
-frame_count = 0
-last_detections = {}  # Armazena as últimas detecções para evitar repetição
-detected_frames = []  # Lista para armazenar os frames detectados
-timestamps = []       # Lista para armazenar os timestamps dos frames detectados
-
-# Carregar o modelo YOLO treinado **apenas uma vez**
+# 📌 Carregar modelo YOLO uma única vez
 @st.cache_resource
 def load_model():
-    return YOLO("models/grupo44_v1.pt")
+    return YOLO(config.MODEL_PATH)
 
 model_trained = load_model()
 
-# Interface do Streamlit
+# 📌 Interface do Streamlit
 st.title("🔪 Detecção de Objetos Cortantes em Vídeo")
 
 # Upload do vídeo pelo usuário
@@ -47,12 +39,15 @@ if uploaded_file:
         st.video(video_path)
 
     with col2:
+        # Opção para enviar e-mail (antes do processamento)
+        send_email = st.checkbox("📩 Enviar e-mail após processamento?")
+
         # Botão para iniciar o processamento
         if st.button("🔍 CLIQUE AQUI para iniciar Processamento"):
             with st.spinner("⏳ Processando vídeo... Isso pode levar alguns minutos."):
 
                 # Criar diretório para salvar os frames detectados
-                output_folder = create_numbered_folder()
+                output_folder = create_numbered_folder(config.OUTPUT_FOLDER_BASE)
 
                 # Obter FPS do vídeo para calcular tempo
                 cap = cv2.VideoCapture(video_path)
@@ -64,16 +59,19 @@ if uploaded_file:
                 status_text.text("🔄 Analisando frames do vídeo...")
 
                 # Processar os frames do vídeo
-                frame_count, last_detections, detected_frames, timestamps = process_video(
-                    video_path, model_trained, output_folder, fps, frame_count, last_detections, detected_frames, timestamps
+                detected_frames, timestamps = run_detection_pipeline(
+                    video_path, model_trained, output_folder, fps
                 )
 
                 # Criar e enviar o relatório PDF ao final do vídeo
                 if detected_frames:
                     pdf_filename = os.path.join(output_folder, "relatorio_detectado.pdf")
-                    status_text.text("📄 Gerando relatório PDF...")
                     create_pdf_with_images(detected_frames, timestamps, pdf_filename)
-                    send_email_with_pdf(pdf_filename, EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER)
+                    
+                    # Enviar e-mail somente se o checkbox foi marcado ANTES
+                    if send_email:
+                        send_email_with_pdf(pdf_filename, config.EMAIL_SENDER, config.EMAIL_PASSWORD, config.EMAIL_RECEIVER)
+                    
                     st.success("✅ Processamento concluído com sucesso!")
                 else:
                     st.error("⚠ Nenhum objeto detectado. PDF não gerado.")

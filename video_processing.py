@@ -1,7 +1,22 @@
-import os
 import cv2
+import config
+import logging
 
 from detection_logic import should_save_frame
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+
+def run_detection_pipeline(video_path, model, output_folder, fps):
+    frame_count, last_detections = 0, {}
+    detected_frames, timestamps = [], []
+
+    frame_count, last_detections, detected_frames, timestamps = process_video(
+        video_path, model, output_folder, fps, frame_count, last_detections, detected_frames, timestamps
+    )
+
+    return detected_frames, timestamps
 
 
 def process_video(video_path, model, output_folder, fps, frame_count, last_detections, detected_frames, timestamps):
@@ -25,10 +40,12 @@ def process_video(video_path, model, output_folder, fps, frame_count, last_detec
             - detected_frames (list): A lista de caminhos dos frames detectados.
             - timestamps (list): A lista de timestamps dos frames detectados.
     """
+    logging.info(f"Iniciando processamento do vídeo {video_path}")
     cap = cv2.VideoCapture(video_path)
 
     # Verificar se o vídeo foi aberto corretamente
     if not cap.isOpened():
+        logging.error(f"Erro ao abrir vídeo: {video_path}")
         print(f"Erro: Não foi possível abrir o vídeo '{video_path}'.")
         return frame_count, last_detections, detected_frames, timestamps
 
@@ -41,7 +58,7 @@ def process_video(video_path, model, output_folder, fps, frame_count, last_detec
         timestamp = frame_count / fps
 
         # Rodar inferência do YOLO no frame
-        results = model(frame, conf=0.4)
+        results = list(model(frame, conf=config.CONFIDENCE_THRESHOLD)) # Converter o gerador para uma lista
 
         # Gerar a imagem com as caixas desenhadas
         annotated_frame = results[0].plot()
@@ -59,8 +76,9 @@ def process_video(video_path, model, output_folder, fps, frame_count, last_detec
 
         # Se houve mudanças nas detecções, salvar o frame e adicioná-lo à lista
         if current_detections:
-            frame_filename = os.path.join(output_folder, f"frame_{frame_count}.jpg")
+            frame_filename = f"{output_folder}/frame_{frame_count}.jpg"
             cv2.imwrite(frame_filename, annotated_frame)
+            logging.info(f"Frame salvo: {frame_filename}")
             print(f"Frame salvo: {frame_filename}")
 
             # Adicionar o frame salvo e seu timestamp às listas
