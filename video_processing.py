@@ -85,8 +85,8 @@ def process_video(video_path, model, output_folder, fps, frame_count, last_detec
             detected_frames.append(frame_filename)
             timestamps.append(timestamp)
 
-        # Atualizar as últimas detecções
-        last_detections = current_detections.copy()
+            # Atualizar as últimas detecções
+            last_detections = current_detections.copy()
 
         # # Exibir a imagem anotada
         # cv2.imshow("YOLO Inference", annotated_frame)
